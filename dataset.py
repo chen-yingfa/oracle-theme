@@ -96,7 +96,7 @@ class OracleThemeDataset(Dataset):
         }
         
     def __len__(self) -> int:
-        return len(self.features)
+        return len(self.features['input_ids'])
 
 if __name__ == '__main__':
     file = 'data/dev.json'

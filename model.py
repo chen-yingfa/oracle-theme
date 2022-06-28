@@ -9,29 +9,27 @@ class BertOracleTheme(nn.Module):
         model_path, 
         vocab_size: int=21000, 
         hidden_size: int=768, 
-        num_classes: int=243,
-        classifier_dropout: float=0.1,
+        num_labels: int=243,
         ):
         '''
         Multi-label classifier, pretrained encoder and pooler, randomly 
         initialized classifier and embedding.
         '''
         super().__init__()
-        self.model = BertForSequenceClassification.from_pretrained(model_path)
+        self.model = BertForSequenceClassification.from_pretrained(
+            model_path, num_labels=num_labels)
         
         # Init custom embedding layer, and deprecate pretrained embeddings
         self.model.embeddings = nn.Embedding(vocab_size, hidden_size)
         self.model.config.problem_type = 'multi_label_classification'
         
-    def forward(self, input_ids=None, attention_mask=None):
-        x = self.model(
+    def forward(self, input_ids=None, attention_mask=None, labels=None):
+        return self.model(
             input_ids=input_ids, 
             attention_mask=attention_mask,
+            labels=labels,
         )
-        print(x.logits)
-        
-        exit()
-        
+
 
 if __name__ == '__main__':
     model_path = 'hfl/rbt3'
