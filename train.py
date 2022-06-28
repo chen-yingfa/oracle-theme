@@ -7,7 +7,7 @@ from tokenization.tokenizer import OracleThemeTokenizer
 from dataset import OracleThemeDataset
 from trainer import Trainer
 
-output_dir = Path('result/temp')
+output_dir = Path('result/rbt3')
 output_dir.mkdir(exist_ok=True, parents=True)
 data_dir = Path('data')
 
@@ -28,9 +28,14 @@ trainer = Trainer(
     output_dir=output_dir,
     batch_size=32,
     log_interval=20,
+    num_epochs=12,
 )
-trainer.train(train_data, dev_data, resume=False)
+trainer.train(train_data, dev_data)
 
 # Test
+test_dir = output_dir / 'test'
 test_data = OracleThemeDataset(data_dir / 'test.json', tokenizer)
+test_result = trainer.evaluate(test_data, test_dir, 'test')
+print(test_result, flush=True)
+json.dump(test_result, open(test_dir / 'result.json'))
 

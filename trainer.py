@@ -446,7 +446,7 @@ class Trainer:
         '''
         self.init_eval_result()
         self.eval_loop(dataset, desc)
-        self.on_eval_end(dataset, desc, output_dir)
+        return self.on_eval_end(dataset, desc, output_dir)
 
     def init_eval_result(self):
         self.total_loss = 0
@@ -461,9 +461,10 @@ class Trainer:
         loss = outputs.loss
         self.total_loss += loss.item()
         logits = outputs.logits       # (B, C)
-        pred_ids = logits.argmax(-1)  # (B)
+        # pred_ids = logits.argmax(-1)  # (B)
+        pred_ids = logits > 0            # (B, C)
         self.all_preds += pred_ids.tolist()
-        self.all_labels += batch['labels'].tolist()
+        self.all_labels += batch['labels'].round().tolist()
         
     def on_eval_end(self, dataset, desc: str, output_dir: Path):
         '''
@@ -472,11 +473,11 @@ class Trainer:
         # Process gathered result
         output_dir.mkdir(exist_ok=True, parents=True)
         # TODO: remove on release
-        dump_json(self.all_preds, 'preds.json')  
-        dump_json(self.all_labels, 'labels.json')
+        dump_json(self.all_preds, output_dir / 'preds.json')  
+        dump_json(self.all_labels, output_dir / 'labels.json')
 
-        id2label = dataset.get_id2label()
-        metrics = get_metrics(self.all_labels, self.all_preds, id2label)
+        # id2label = dataset.get_id2label()
+        metrics = self.get_metrics(self.all_labels, self.all_preds)
 
         result = {
             'prec': metrics['prec'],
@@ -489,4 +490,38 @@ class Trainer:
         return {
             'result': result,
             'preds': self.all_preds,
+        }
+
+    def get_metrics(self, labels, preds) -> dict:
+        assert len(labels) == len(preds)
+        assert len(labels[0]) == len(preds[0])
+        
+        # Flatten
+        labels = sum(labels, [])
+        preds = sum(preds, [])
+        labels = [int(label + 0.5) for label in labels]  # Turn into bools
+        
+        match = 0
+        num_pos_label = 0
+        num_pos_pred = 0
+        true_pos = 0
+        for label, pred in zip(labels, preds):
+            if label and pred:
+                match += 1
+                if label:
+                    true_pos += 1
+            if label:
+                num_pos_label += 1
+            if pred:
+                num_pos_pred += 1
+            
+        em = match / len(labels)
+        recall = true_pos / num_pos_label
+        prec = true_pos / num_pos_pred
+        f1 = 2 * recall * prec / (recall + prec)
+        return {
+            'acc': em,
+            'f1': f1,
+            'recall': recall,
+            'prec': prec,
         }

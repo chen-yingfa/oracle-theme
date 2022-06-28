@@ -6,7 +6,7 @@ def load_json(file):
 
 
 def dump_json(data, file):
-    json.dump(open(file, 'w'), ensure_ascii=False)
+    json.dump(data, open(file, 'w'), ensure_ascii=False)
 
 
 def load_jsonl(file) -> list:
