@@ -406,10 +406,12 @@ class Trainer:
     '''
 
     def backward(self, step: int, loss: Module):
+        loss /= self.grad_acc_steps
         loss.backward()
-        self.optimizer.step()
-        self.scheduler.step()
-        self.optimizer.zero_grad()
+        if self.cur_train_step % self.grad_acc_steps == 0:
+            self.optimizer.step()
+            self.scheduler.step()
+            self.optimizer.zero_grad()
         
 
     def train_step(self, step: int, batch: dict):
@@ -421,8 +423,7 @@ class Trainer:
         loss = outputs.loss
 
         # Backward
-        if self.cur_train_step % self.grad_acc_steps == 0:
-            self.backward(step, loss)
+        self.backward(step, loss)
 
         # Log
         if self.cur_train_step % self.log_interval == 0:
@@ -452,6 +453,7 @@ class Trainer:
         self.total_loss = 0
         self.all_labels = []
         self.all_preds = []
+        self.all_logits = []
     
     def gather_eval_result(self, step: int, batch: dict, outputs):
         '''
@@ -462,9 +464,11 @@ class Trainer:
         self.total_loss += loss.item()
         logits = outputs.logits       # (B, C)
         # pred_ids = logits.argmax(-1)  # (B)
-        pred_ids = logits > 0            # (B, C)
-        self.all_preds += pred_ids.tolist()
+        preds = torch.zeros(logits.size())
+        preds[logits > 0] = 1.0         # (B, C)
+        self.all_preds += preds.tolist()
         self.all_labels += batch['labels'].round().tolist()
+        self.all_logits += logits.tolist()
         
     def on_eval_end(self, dataset, desc: str, output_dir: Path):
         '''
@@ -475,6 +479,7 @@ class Trainer:
         # TODO: remove on release
         dump_json(self.all_preds, output_dir / 'preds.json')  
         dump_json(self.all_labels, output_dir / 'labels.json')
+        dump_json(self.all_logits, output_dir / 'logits.json')
 
         # id2label = dataset.get_id2label()
         metrics = self.get_metrics(self.all_labels, self.all_preds)
@@ -499,7 +504,8 @@ class Trainer:
         # Flatten
         labels = sum(labels, [])
         preds = sum(preds, [])
-        labels = [int(label + 0.5) for label in labels]  # Turn into bools
+        labels = [int(label + 0.5) for label in labels]  # Binarize
+        preds = [int(pred + 0.5) for pred in preds]
         
         match = 0
         num_pos_label = 0
@@ -516,9 +522,9 @@ class Trainer:
                 num_pos_pred += 1
             
         em = match / len(labels)
-        recall = true_pos / num_pos_label
-        prec = true_pos / num_pos_pred
-        f1 = 2 * recall * prec / (recall + prec)
+        recall = true_pos / (num_pos_label + 1e-10)
+        prec = true_pos / (num_pos_pred + 1e-10)
+        f1 = 2 * recall * prec / (recall + prec + 1e-10)
         return {
             'acc': em,
             'f1': f1,
