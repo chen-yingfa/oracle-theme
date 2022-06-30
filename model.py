@@ -7,9 +7,9 @@ class BertOracleTheme(nn.Module):
     def __init__(
         self, 
         model_path, 
+        num_labels: int,
         vocab_size: int=21000, 
         hidden_size: int=768, 
-        num_labels: int=243,
         ):
         '''
         Multi-label classifier, pretrained encoder and pooler, randomly 
