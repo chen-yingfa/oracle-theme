@@ -17,13 +17,15 @@ class OracleThemeDataset(Dataset):
         
     def get_examples(self, file) -> list:
         examples = []
-        for line in open(file):
-            data = json.loads(line)
-            labels = data['theme'].split('/')
+        lines = json.load(open(file, encoding='utf8'))
+        # for line in open(file):
+        for entry in lines:
+            # entry = json.loads(line)
+            labels = entry['theme'].split('/')
             labels = [t.strip() for t in labels]
             labels = [t for t in labels if len(t) > 0]
             example = {
-                'text': data['oracle_text'],
+                'text': entry['oracle_text'],
                 'labels': labels,
             }
             examples.append(example)

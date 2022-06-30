@@ -14,4 +14,3 @@ labels = json.load(open(labels_file))
 
 preds = np.array(preds)
 labels = np.array(labels)
-print(preds.shape)
