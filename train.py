@@ -9,9 +9,10 @@ from trainer import Trainer
 
 # model_path = 'hfl/chinese-macbert-base'
 model_path = 'hfl/rbt3'
-output_dir = Path('result', model_path)
+exp_name = '220629'
+output_dir = Path('result', model_path, exp_name)
 output_dir.mkdir(exist_ok=True, parents=True)
-data_dir = Path('data')
+data_dir = Path('data/220629')
 
 
 # Tokenizer

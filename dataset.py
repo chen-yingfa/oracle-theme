@@ -6,24 +6,46 @@ from torch.utils.data import Dataset
 from tokenization.tokenizer import OracleThemeTokenizer
 
 
+def load_label_map(clusters_file: str) -> dict:
+    clusters = json.load(open(clusters_file, encoding='utf-8'))
+    map = {}
+    for name, labels in clusters.items(): 
+        for label in labels:
+            map[label] = name
+    return map
+
+
 class OracleThemeDataset(Dataset):
-    def __init__(self, file: str, tokenizer: OracleThemeTokenizer, max_length: int=512):
+    def __init__(
+        self, 
+        file: str, 
+        tokenizer: OracleThemeTokenizer, 
+        max_length: int=512,
+        clusters_file: str='data/labels/label_clusters.json',
+        ):
         self.file = file
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.clusters_file = clusters_file
         
-        self.examples = self.get_examples(file)
+        self.theme_clusters = json.load(open(clusters_file, 'r', encoding='utf8'))
+        self.examples = self.get_examples(file, clusters_file)
         self.features = self.get_features(self.examples, tokenizer)
         
-    def get_examples(self, file) -> list:
+    def get_examples(self, file: str, clusters_file: str=None) -> list:
+        theme_map = load_label_map(clusters_file)
         examples = []
         lines = json.load(open(file, encoding='utf8'))
         # for line in open(file):
         for entry in lines:
             # entry = json.loads(line)
-            labels = entry['theme'].split('/')
-            labels = [t.strip() for t in labels]
-            labels = [t for t in labels if len(t) > 0]
+            themes = entry['theme'].split('/')
+            labels = []
+            for i, theme in enumerate(themes):
+                theme = theme.strip()
+                if theme == '': continue
+                if theme in theme_map:
+                    labels.append(theme_map[theme])
             example = {
                 'text': entry['oracle_text'],
                 'labels': labels,
@@ -32,15 +54,7 @@ class OracleThemeDataset(Dataset):
         return examples
     
     def get_label_list(self) -> list:
-        return [
-            '祭祀', '災難', '奴隸主貴族', '時間', 
-            '方域', '氣象', '卜法', '漁獵、畜牧', '戰爭', 
-            '鬼神崇拜', '商業、交通', '吉凶、夢幻', 
-            '軍隊、刑法、監獄', '貢納', '農業', '官吏', 
-            '飲食', '音樂', '死喪', '生育', 
-            '疾病', '建築', '天文、曆法', 
-            '奴隸、平民'
-        ]
+        return self.theme_clusters.keys()
         
     def get_label2id(self) -> dict:
         label_list = self.get_label_list()
