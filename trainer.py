@@ -174,7 +174,7 @@ class Trainer:
             self.log(f'{key:>16}: {getattr(self, key)}')
         self.log('---------------------------------')
 
-    def setup_optimizer_and_scheuler(
+    def setup_optimizer_and_scheduler(
         self, 
         lr: float,
         num_opt_steps: int, 
@@ -226,7 +226,8 @@ class Trainer:
         Load best checkpoint in `self.output_dir` by dev loss,
         will change value of `self.model`.
         '''
-        min_loss = float('inf')
+        # min_loss = float('inf')
+        min_loss = float('-inf')
         best_ckpt_dir = None
         for ckpt_dir in sorted(self.output_dir.glob('checkpoint-*')):
             if not ckpt_dir.is_dir():
@@ -235,8 +236,10 @@ class Trainer:
             if not result_file.exists():
                 continue
             result = load_json(result_file)
-            loss = result['loss']
-            if loss < min_loss:
+            # loss = result['loss']
+            loss = result['f1']
+            # if loss < min_loss:
+            if loss > min_loss:
                 min_loss = loss
                 best_ckpt_dir = ckpt_dir
         self.load_ckpt(best_ckpt_dir)
@@ -333,7 +336,7 @@ class Trainer:
 
         # Optimizer
         num_opt_steps = len(train_dataloader) // self.grad_acc_steps * self.num_epochs
-        self.setup_optimizer_and_scheuler(self.lr, num_opt_steps)
+        self.setup_optimizer_and_scheduler(self.lr, num_opt_steps)
 
         # Handle resumption
         if resume and self.can_resume():
