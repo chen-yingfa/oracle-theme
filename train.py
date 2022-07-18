@@ -1,22 +1,28 @@
 from pathlib import Path
 import json
 
+from transformers import BertTokenizer
 
 from model import BertOracleTheme
 from tokenization.tokenizer import OracleThemeTokenizer
 from dataset import OracleThemeDataset
 from trainer import Trainer
 
+# Hyperparams
+lr = 2e-4
+
 # model_path = 'hfl/chinese-macbert-base'
-model_path = 'hfl/rbt3'
-exp_name = '220629'
-output_dir = Path('result', model_path, exp_name)
+model_path = 'hfl/rbt6'
+data_name = '220629_handa'
+exp_name = f'lr{lr}'
+output_dir = Path('result', data_name, model_path, exp_name)
 output_dir.mkdir(exist_ok=True, parents=True)
-data_dir = Path('data/220629')
+data_dir = Path('data/preprocessed/220629')
 
 
 # Tokenizer
-tokenizer = OracleThemeTokenizer('tokenization/vocab.txt')
+# tokenizer = OracleThemeTokenizer('tokenization/vocab.txt')
+tokenizer = BertTokenizer.from_pretrained(model_path)
 
 train_data = OracleThemeDataset(data_dir / 'train.json', tokenizer)
 dev_data = OracleThemeDataset(data_dir / 'dev.json', tokenizer)
@@ -29,10 +35,11 @@ model = BertOracleTheme(model_path, num_labels=num_labels)
 trainer = Trainer(
     model=model.cuda(),
     output_dir=output_dir,
-    batch_size=32,
-    grad_acc_steps=1,
-    log_interval=20,
-    num_epochs=12,
+    batch_size=16,
+    grad_acc_steps=2,
+    log_interval=100,
+    num_epochs=8,
+    lr=lr,
 )
 trainer.train(train_data, dev_data)
 
@@ -40,6 +47,7 @@ trainer.train(train_data, dev_data)
 test_dir = output_dir / 'test'
 test_dir.mkdir(exist_ok=True, parents=True)
 test_data = OracleThemeDataset(data_dir / 'test.json', tokenizer)
+trainer.load_best_ckpt()
 test_result = trainer.evaluate(test_data, test_dir, 'test')
 del test_result['preds']
 print(test_result, flush=True)

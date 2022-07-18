@@ -13,10 +13,10 @@ def load_label_map() -> dict:
     return map
 
 # Load data
-data_dir = Path('./data')
-# files = ['train.json', 'dev.json', 'test.json']
+data_dir = Path('./220629')
+files = ['train.json', 'dev.json', 'test.json']
 # examples = sum([load_jsonl(data_dir / f) for f in files], [])
-files = ['ancient_0.json', 'ancient_1.json']
+# files = ['ancient_0.json', 'ancient_1.json']
 examples = sum([json.load(open(data_dir / f, encoding='utf8')) for f in files], [])
 themes = [x['theme'] for x in examples]
 label_map = load_label_map()
@@ -40,7 +40,8 @@ label_list = sorted(label_list, key=lambda x: x[1], reverse=True)
 print(label_list)
 print(len(label_list))
 
-with open('main_labels.txt', 'w', encoding='utf-8') as f:
+dst_file = 'label_distr.txt'
+with open(dst_file, 'w', encoding='utf-8') as f:
     for name, occ in label_list:
         f.write(f'{name}\t{occ}\n')
     

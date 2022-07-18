@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import random
 
-
+# NOTE: Change this
 data_dir = Path('220629')
 src_file = data_dir / 'ancient_220629.json'
 

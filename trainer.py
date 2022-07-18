@@ -121,6 +121,7 @@ class Trainer:
         eval_strategy: str='epoch',
         do_log_to_file: bool=True,
         log_file: str=None,
+        data_drop_last: bool=False,
         ):
 
         self.model = model
@@ -134,6 +135,7 @@ class Trainer:
         self.eval_interval = eval_interval
         self.do_log_to_file = do_log_to_file
         self.log_file = log_file
+        self.data_drop_last = data_drop_last
         # self.save_strategy = eval_strategy
         # self.save_interval = eval_interval
         self.setup_output_dir()
@@ -312,7 +314,12 @@ class Trainer:
         dump_json(preds, ckpt_dir / f'preds.json')
 
     def get_train_dataloader(self, dataset):
-        return DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(
+            dataset, 
+            batch_size=self.batch_size, 
+            shuffle=True, 
+            drop_last=self.data_drop_last
+        )
 
     def train(
         self, 
@@ -382,7 +389,12 @@ class Trainer:
         
         Evaluate model on dataloader
         '''
-        dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
+        dataloader = DataLoader(
+            dataset, 
+            batch_size=self.batch_size, 
+            shuffle=False,
+            drop_last=self.data_drop_last,
+        )
 
         self.model.eval()
         self.eval_start_time = time()
@@ -420,7 +432,7 @@ class Trainer:
 
         # Forward
         outputs = self.model(**batch)
-        loss = outputs.loss
+        loss = outputs['loss']
 
         # Backward
         self.backward(step, loss)
@@ -460,9 +472,9 @@ class Trainer:
         Called at the end of each evaluation step,
         should gather result from this batch.
         '''
-        loss = outputs.loss
+        loss = outputs['loss']
         self.total_loss += loss.item()
-        logits = outputs.logits       # (B, C)
+        logits = outputs['logits']       # (B, C)
         # pred_ids = logits.argmax(-1)  # (B)
         preds = torch.zeros(logits.size())
         preds[logits > 0] = 1.0         # (B, C)
