@@ -32,7 +32,7 @@ def load_label_map(file):
 
 
 
-label_map = load_label_map('label_map_0.txt')
+label_map = load_label_map('label_map_0702.txt')
 print(label_map)
 
 clusters = {}
@@ -45,6 +45,7 @@ for raw, name in label_map.items():
 print(len(clusters))
 print(clusters.keys())
 clusters_file = 'label_clusters.json'
+print(f'Dumping label clusters to {clusters_file}')
 json.dump(
     clusters, open(clusters_file, 'w', encoding='utf8'), 
     indent=2, ensure_ascii=False)
