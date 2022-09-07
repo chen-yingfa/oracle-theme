@@ -11,8 +11,8 @@ from trainer import Trainer
 # Hyperparams
 lr = 2e-4
 
-# model_path = 'hfl/chinese-macbert-base'
-model_path = 'hfl/rbt6'
+model_path = 'hfl/chinese-macbert-base'
+# model_path = 'hfl/rbt6'
 data_name = '220629_handa'
 exp_name = f'lr{lr}'
 output_dir = Path('result', data_name, model_path, exp_name)

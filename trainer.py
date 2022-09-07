@@ -1,5 +1,10 @@
+'''
+General trainer code for PyTorch models.
+
+Written by Donny Chan, feel free to copy and redistribute.
+'''
+
 from pathlib import Path
-from argparse import Namespace
 from time import time
 import json
 from typing import Union
