@@ -36,9 +36,10 @@ def get_metrics(labels, preds):
     return scores
         
 
-model_path = 'hfl/rbt3'
+# model_path = 'hfl/rbt3'
+model_path = 'lstm'
 exp_name = '220629_handa'
-run_name = 'lr0.0001'
+run_name = 'lr0.5_bs64_embed768_h512_ep4'
 result_dir = Path('result', exp_name, model_path, run_name)
 
 test_dir = result_dir / 'test'

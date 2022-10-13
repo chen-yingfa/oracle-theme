@@ -1,6 +1,11 @@
 # Oracle Theme
 
-用 BERT 对甲骨文进行主题分类。
+对甲骨文进行主题分类。
+
+模型：
+- LSTM
+- BERT-Chinese
+- JiaguTextBERT（宋晨阳）
 
 ## Data
 

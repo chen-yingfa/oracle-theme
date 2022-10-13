@@ -9,16 +9,16 @@ from dataset import OracleThemeDataset
 from trainer import Trainer
 
 # Hyperparams
-lr = 0.05
+lr = 0.5
 batch_size = 64
-hidden_dim = 256
-embed_dim = 300
+hidden_dim = 512
+embed_dim = 512
 num_epochs = 4
 
 # model_path = 'hfl/chinese-macbert-base'
 model_path = 'lstm'
 data_name = '220629_handa'
-exp_name = f'lr{lr}_bs{batch_size}_embed{embed_dim}_h{hidden_dim}'
+exp_name = f'lr{lr}_bs{batch_size}_embed{embed_dim}_h{hidden_dim}_ep{num_epochs}'
 output_dir = Path('result', data_name, model_path, exp_name)
 output_dir.mkdir(exist_ok=True, parents=True)
 data_dir = Path('data/preprocessed/220629')
@@ -52,7 +52,7 @@ trainer = Trainer(
     lr=lr,
     data_drop_last=True,
 )
-trainer.train(train_data, dev_data)
+# trainer.train(train_data, dev_data)
 
 # Test
 test_dir = output_dir / 'test'

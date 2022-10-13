@@ -3,7 +3,7 @@ import json
 
 from transformers import BertTokenizer
 
-from model import BertOracleTheme
+from model import BertOracleTheme, JiaguTextBert
 from tokenization.tokenizer import OracleThemeTokenizer
 from dataset import OracleThemeDataset
 from trainer import Trainer
@@ -11,7 +11,8 @@ from trainer import Trainer
 # Hyperparams
 lr = 2e-4
 
-model_path = 'hfl/chinese-macbert-base'
+# model_path = 'hfl/chinese-macbert-base'
+model_path = '/data/private/chenyingfa/models/jiagu_text_bert'
 # model_path = 'hfl/rbt6'
 data_name = '220629_handa'
 exp_name = f'lr{lr}'
@@ -24,12 +25,15 @@ data_dir = Path('data/preprocessed/220629')
 # tokenizer = OracleThemeTokenizer('tokenization/vocab.txt')
 tokenizer = BertTokenizer.from_pretrained(model_path)
 
+# Data
 train_data = OracleThemeDataset(data_dir / 'train.json', tokenizer)
 dev_data = OracleThemeDataset(data_dir / 'dev.json', tokenizer)
 num_labels = len(train_data.get_label_list())
 
 # Model
-model = BertOracleTheme(model_path, num_labels=num_labels)
+# model = BertOracleTheme(model_path, num_labels=num_labels)
+model = JiaguTextBert(model_path, num_labels=num_labels)
+
 
 # Train
 trainer = Trainer(
@@ -52,4 +56,3 @@ test_result = trainer.evaluate(test_data, test_dir, 'test')
 del test_result['preds']
 print(test_result, flush=True)
 json.dump(test_result, open(test_dir / 'result.json', 'w'))
-

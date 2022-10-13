@@ -3,3 +3,5 @@ data/ancient.json
 data/data
 result
 *.json
+slurm-*.out
+*.jpg
