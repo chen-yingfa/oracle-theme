@@ -149,10 +149,10 @@ class Trainer:
         '''Called every `log_interval` steps during training.'''
         state = {
             'step': self.cur_train_step,
-            'ep': self.cur_train_step / len(self.train_dataloader),
+            'ep': round(self.cur_train_step / len(self.train_dataloader), 3),
             'lr': self.scheduler.get_last_lr()[0],
-            'loss': cur_loss.item(),
-            'time_elapsed': time() - self.train_start_time,
+            'loss': round(cur_loss.item(), 4),
+            'time_elapsed': round(time() - self.train_start_time, 1),
         }
         self.log(state)
 

@@ -9,14 +9,15 @@ from dataset import OracleThemeDataset
 from trainer import Trainer
 
 # Hyperparams
-lr = 2e-4
+lr = 5e-5
 
 # model_path = 'hfl/chinese-macbert-base'
 model_path = '/data/private/chenyingfa/models/jiagu_text_bert'
+model_name = 'jiagu_text_bert'
 # model_path = 'hfl/rbt6'
 data_name = '220629_handa'
 exp_name = f'lr{lr}'
-output_dir = Path('result', data_name, model_path, exp_name)
+output_dir = Path('result', data_name, model_name, exp_name)
 output_dir.mkdir(exist_ok=True, parents=True)
 data_dir = Path('data/preprocessed/220629')
 
@@ -39,8 +40,8 @@ model = JiaguTextBert(model_path, num_labels=num_labels)
 trainer = Trainer(
     model=model.cuda(),
     output_dir=output_dir,
-    batch_size=16,
-    grad_acc_steps=2,
+    batch_size=8,
+    grad_acc_steps=4,
     log_interval=100,
     num_epochs=8,
     lr=lr,
