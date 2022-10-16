@@ -49,6 +49,14 @@ data_dir = Path('./my/data/path')
 
 > 目前无视 `oracle_text` 字段。
 
+### Labels
+
+The raw data is labeled manually, so the theme labeling schema is not very strict. We post-process the labels by merging similar labels. This results in 28 themes:
+
+```python
+['災難', '祭祀', '奴隸主貴族', '卜法', '氣象', '時間', '地名', '漁獵、畜牧', '人名', '方域', '戰爭', '吉凶、夢幻', '鬼神崇拜', '刑法', '死喪', '農業', '音樂', '飲食', '生育', '官吏', '居住', '貢納', '疾病', '文字', '軍隊', '天文', '奴隸和平民', '交通']
+```
+
 
 ## Execution
 
@@ -59,3 +67,22 @@ data_dir = Path('./my/data/path')
 ### Testing
 
 同上，将来会单独把 test 代码分离出来的。
+
+
+## Result
+
+Model               | Acc.  | Micro-F1 | Macro-F1
+---                 | ---   | ---      | ---
+LSTM                | 15.43 |  20.05   | 9.21
+BiLSTM              | 
+RBT3                | 81.00 | 75.76    | 42.37
+BERT (Rand-init)    | 
+BERT (Pretrained)   | 79.10 |
+
+
+
+F1 of RBT3 on each theme sorted by example count (descending):
+
+<img src="./images/f1_theme.png" style="width: 70%">
+
+So, on less frequent themes, the F1 is very bad.

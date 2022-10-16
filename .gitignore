@@ -5,3 +5,4 @@ result
 *.json
 slurm-*.out
 *.jpg
+label_cnt.txt
