@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import argparse
 
 from transformers import BertTokenizer
 
@@ -16,7 +17,8 @@ embed_dim = 512
 num_epochs = 4
 
 # model_path = 'hfl/chinese-macbert-base'
-model_path = 'lstm'
+model_path = 'bilstm'
+bidirectional = model_path == 'bilstm'
 data_name = '220629_handa'
 exp_name = f'lr{lr}_bs{batch_size}_embed{embed_dim}_h{hidden_dim}_ep{num_epochs}'
 output_dir = Path('result', data_name, model_path, exp_name)
@@ -39,6 +41,7 @@ model = LSTMClassifier(
     batch_size=batch_size,
     embed_dim=embed_dim,
     hidden_dim=hidden_dim,
+    bidirection=bidirectional,
 )
 
 # Train

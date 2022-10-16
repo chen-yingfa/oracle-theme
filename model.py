@@ -73,13 +73,14 @@ class LSTMClassifier(nn.Module):
         embed_dim: int = 768,
         hidden_dim: int = 768,
         vocab_size: int = 21000,
+        bidirectional: bool = False,
     ):
         super(LSTMClassifier, self).__init__()
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
 
         self.embeddings = nn.Embedding(vocab_size, embed_dim)
-        self.lstm = nn.LSTM(embed_dim, hidden_dim)
+        self.lstm = nn.LSTM(embed_dim, hidden_dim, bidirectional=bidirectional)
         self.hidden2label = nn.Linear(hidden_dim, num_labels)
         self.hidden = self.init_hidden()
         self.loss_fn = nn.BCEWithLogitsLoss()
