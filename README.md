@@ -54,15 +54,34 @@ data_dir = Path('./my/data/path')
 The raw data is labeled manually, so the theme labeling schema is not very strict. We post-process the labels by merging similar labels. This results in 28 themes:
 
 ```python
-['災難', '祭祀', '奴隸主貴族', '卜法', '氣象', '時間', '地名', '漁獵、畜牧', '人名', '方域', '戰爭', '吉凶、夢幻', '鬼神崇拜', '刑法', '死喪', '農業', '音樂', '飲食', '生育', '官吏', '居住', '貢納', '疾病', '文字', '軍隊', '天文', '奴隸和平民', '交通']
+[
+  '災難', '祭祀', '奴隸主貴族', '卜法', '氣象', '時間', 
+  '地名', '漁獵、畜牧', '人名', '方域', '戰爭', '吉凶、夢幻', 
+  '鬼神崇拜', '刑法', '死喪', '農業', '音樂', '飲食', 
+  '生育', '官吏', '居住', '貢納', '疾病', '文字', 
+  '軍隊', '天文', '奴隸和平民', '交通'
+]
 ```
 
+The mapping from merged themes to original themes is stored in `data/label_clusters.json`. 
 
 ## Execution
 
 ### Training
 
-执行：`python3 train.py`
+
+LSTM:
+
+```python
+python3 train_lstm.py
+```
+
+BERT and RBT:
+
+```python
+python3 train.py
+```
+
 
 ### Testing
 

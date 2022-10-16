@@ -37,9 +37,11 @@ def get_metrics(labels, preds):
         
 
 # model_path = 'hfl/rbt3'
-model_path = 'lstm'
+# model_path = 'lstm'
+model_path = 'jiagu_text_bert'
 exp_name = '220629_handa'
-run_name = 'lr0.5_bs64_embed768_h512_ep4'
+# run_name = 'lr0.5_bs64_embed768_h512_ep4'
+run_name = 'lr5e-05'
 result_dir = Path('result', exp_name, model_path, run_name)
 
 test_dir = result_dir / 'test'
@@ -62,7 +64,7 @@ scores = get_metrics(labels, preds)
 
 print(scores)
 f1s = [s['f1'] for s in scores]
-print(f'Average F1: {sum(f1s) / len(f1s)}')
+print(f'Average F1: {round(100 * sum(f1s) / len(f1s), 2)}')
 print(f1s)
 plt.plot(f1s)
 plt.xlabel('Theme')
