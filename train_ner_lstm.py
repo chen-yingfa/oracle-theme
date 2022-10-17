@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 import argparse
 
+import torch
 from transformers import BertTokenizer
 
 from ner.model import LstmForNer
@@ -11,7 +12,7 @@ from trainer import Trainer
 
 # Hyperparams
 lr = 0.1
-batch_size = 64
+batch_size = 2
 hidden_dim = 512
 embed_dim = 512
 num_epochs = 8
@@ -26,7 +27,7 @@ exp_name = (
 output_dir = Path("result", data_name, model_path, exp_name)
 output_dir.mkdir(exist_ok=True, parents=True)
 data_dir = Path("./ner")
-
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Tokenizer
 # tokenizer = OracleThemeTokenizer('tokenization/vocab.txt')
@@ -34,7 +35,6 @@ tokenizer = BertTokenizer.from_pretrained("hfl/rbt3")
 
 train_data = OracleNerDataset(data_dir / "train.csv", tokenizer)
 dev_data = OracleNerDataset(data_dir / "dev.csv", tokenizer)
-dev_data = None
 num_labels = len(train_data.label_list)
 
 # Model
@@ -45,18 +45,21 @@ model = LstmForNer(
     embed_dim=embed_dim,
     hidden_dim=hidden_dim,
     bidirectional=bidirectional,
+    device=device,
 )
 
 # Train
 trainer = Trainer(
-    model=model.cuda(),
+    model=model.to(device),
     output_dir=output_dir,
     batch_size=batch_size,
     grad_acc_steps=1,
-    log_interval=100,
+    log_interval=1,
     num_epochs=num_epochs,
     lr=lr,
     data_drop_last=True,
+    device=device,
+    task="sequence_labeling",
 )
 trainer.train(train_data, dev_data)
 

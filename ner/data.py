@@ -71,7 +71,8 @@ class OracleNerDataset(Dataset):
         )
 
         # Build label tensor
-        all_labels = torch.zeros(num_examples, self.max_length)
+        all_labels = torch.zeros(
+            num_examples, inputs['input_ids'].shape[1], dtype=torch.long)
         for ex_idx, ex in enumerate(examples):
             for label_idx, label_id in enumerate(ex["labels"]):
                 all_labels[ex_idx][label_idx] = label_id

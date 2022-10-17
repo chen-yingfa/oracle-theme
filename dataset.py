@@ -77,12 +77,12 @@ class OracleThemeDataset(Dataset):
         # Build label one hot representation
         num_examples = len(examples)
         num_labels = len(label2id)
-        all_labels = torch.zeros(num_examples, num_labels)
+        all_labels = torch.zeros(num_examples, num_labels, dtype=torch.long)
         for ex_idx, ex in enumerate(examples):
             # print(x)
             for label in ex["labels"]:
                 label_id = label2id[label]
-                all_labels[ex_idx][label_id] = 1.0
+                all_labels[ex_idx][label_id] = 1
 
         print(f"Tokenizing {len(all_texts)} texts...")
         # inputs = tokenizer(all_texts, self.max_length)

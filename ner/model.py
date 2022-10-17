@@ -12,11 +12,13 @@ class LstmForNer(nn.Module):
         hidden_dim: int = 768,
         vocab_size: int = 21000,
         bidirectional: bool = False,
+        device: str = "cuda",
     ):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.bidirectional = bidirectional
+        self.device = device
         self.d = 2 if self.bidirectional else 1
 
         self.embeddings = nn.Embedding(vocab_size, embed_dim)
@@ -33,10 +35,14 @@ class LstmForNer(nn.Module):
 
     def init_hidden(self):
         h0 = Variable(
-            torch.zeros(self.d, self.batch_size, self.hidden_dim).cuda()
+            torch.zeros(self.d, self.batch_size, self.hidden_dim).to(
+                self.device
+            )
         )
         c0 = Variable(
-            torch.zeros(self.d, self.batch_size, self.hidden_dim).cuda()
+            torch.zeros(self.d, self.batch_size, self.hidden_dim).to(
+                self.device
+            )
         )
         return (h0, c0)
 
@@ -49,9 +55,13 @@ class LstmForNer(nn.Module):
         """
         self.hidden = self.init_hidden()
         x = self.embeddings(input_ids)
-        x = x.view(input_ids.shape[1], self.batch_size, -1)  # (L, B, H)
+        x = x.permute(1, 0, 2)  # (L, B, H)
         lstm_out, self.hidden = self.lstm(x, self.hidden)  # (L, B, H)
-        logits = self.hidden2label(lstm_out[-1])  # (L, B, C)
+        # print(lstm_out.shape)  # (L, B, d*H)
+        logits = self.hidden2label(lstm_out)  # (L, B, C)
+        logits = logits.permute(1, 0, 2)  # (B, L, C)
+        logits = logits.reshape(-1, logits.shape[-1])  # (B*L, C)
+        labels = labels.reshape(-1)  # (B*L)
         loss = self.loss_fn(logits, labels)
         if labels is None:
             return {

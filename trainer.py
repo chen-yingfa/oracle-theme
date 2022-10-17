@@ -139,6 +139,8 @@ class Trainer:
         do_log_to_file: bool = True,
         log_file: str = None,
         data_drop_last: bool = False,
+        device: str = "cuda",
+        task: str = "sequence_classification",
     ):
 
         self.model = model
@@ -153,6 +155,8 @@ class Trainer:
         self.do_log_to_file = do_log_to_file
         self.log_file = log_file
         self.data_drop_last = data_drop_last
+        self.device = device
+        self.task = task
         # self.save_strategy = eval_strategy
         # self.save_interval = eval_interval
         self.setup_output_dir()
@@ -187,6 +191,9 @@ class Trainer:
             "log_interval",
             "eval_interval",
             "eval_strategy",
+            "data_drop_last",
+            "device",
+            "task",
         ]:
             self.log(f"{key:>16}: {getattr(self, key)}")
         self.log("---------------------------------")
@@ -347,7 +354,7 @@ class Trainer:
 
     def train(
         self,
-        train_dataset: Union[Dataset, DataLoader],
+        train_dataset: Dataset,
         dev_dataset: Dataset,
         resume: bool = True,
     ):
@@ -382,7 +389,7 @@ class Trainer:
         self.log(f"# train steps: {len(train_dataloader)}")
         if dev_dataset:
             self.log(f"# dev features: {len(dev_dataset)}")
-        self.log('------------------------------')
+        self.log("------------------------------")
 
         while self.cur_epoch < self.num_epochs:
             self.cur_epoch += 1
@@ -412,7 +419,7 @@ class Trainer:
         self.log(f"*** End training epoch {self.cur_epoch} ***")
 
     def prepare_batch(self, batch: dict) -> dict:
-        return {k: v.cuda() for k, v in batch.items()}
+        return {k: v.to(self.device) for k, v in batch.items()}
 
     def eval_loop(self, dataset: Dataset, desc: str):
         """
@@ -506,12 +513,29 @@ class Trainer:
         """
         loss = outputs["loss"]
         self.total_loss += loss.item()
+
         logits = outputs["logits"]  # (B, C)
-        # pred_ids = logits.argmax(-1)  # (B)
-        preds = torch.zeros(logits.size())
-        preds[logits > 0] = 1.0  # (B, C)
+        if self.task == "sequence_labeling":
+            # For sequence labeling (eg. NER),
+            # logits: (B * L, C)
+            # labels: (B, L)
+            logits = logits.view(*batch["labels"].shape, -1)  # (B, L, C)
+            preds = logits.argmax(-1)  # (B, L)
+        elif self.task == "multilabel_classification":
+            preds = torch.zeros(
+                logits.shape[0],
+                logits.shape[1],
+                dtype=torch.long,
+                device=logits.device,
+            )
+            preds[logits > 0] = 1.0  # (B, C)
+        elif self.task == "sequence_classification":
+            preds = logits.argmax(-1)  # (B)
+        else:
+            raise ValueError(f"Unknown task: {self.task}")
+
         self.all_preds += preds.tolist()
-        self.all_labels += batch["labels"].round().tolist()
+        self.all_labels += batch["labels"].tolist()
         self.all_logits += logits.tolist()
 
     def on_eval_end(self, dataset, desc: str, output_dir: Path):
@@ -543,8 +567,22 @@ class Trainer:
         }
 
     def get_metrics(self, labels, preds) -> dict:
-        assert len(labels) == len(preds)
-        assert len(labels[0]) == len(preds[0])
+        """
+        For Sequence Classification:
+            labels: (B,)
+            preds: (B,)
+        For Sequence Labeling:
+            labels: (B, L)
+            preds: (B, L)
+        For Multilabel Classification:
+            labels: (B, C)
+            preds: (B, C)
+        """
+        assert len(labels) == len(preds), f"{len(labels)} != {len(preds)}"
+        assert (
+            len(labels[0]) == len(preds[0]),
+            f"{len(labels[0])} != {len(preds[0])}",
+        )
 
         # Flatten
         labels = sum(labels, [])
