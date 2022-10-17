@@ -1,71 +1,9 @@
-from pathlib import Path
 import torch
 from torch import nn, LongTensor
 from torch.autograd import Variable
-from transformers import BertForSequenceClassification
 
 
-class JiaguTextBert(nn.Module):
-    """
-    The text encoder module from unified pretrained model.
-
-    The model is pretrained on sequence classification task.
-    """
-
-    def __init__(
-        self,
-        model_path: Path,
-        num_labels: int,
-    ):
-        super().__init__()
-        self.model = BertForSequenceClassification.from_pretrained(
-            model_path,
-            num_labels=num_labels,
-            problem_type="multi_label_classification",
-        )
-        # Note that the classifier is pretrained on sequence classification,
-        # so the multi-label classification is not trained.
-
-    def forward(self, input_ids=None, attention_mask=None, labels=None):
-        return self.model(
-            input_ids,
-            attention_mask=attention_mask,
-            labels=labels,
-        )
-
-
-class BertOracleTheme(nn.Module):
-    def __init__(
-        self,
-        model_path,
-        num_labels: int,
-        vocab_size: int = 21000,
-        hidden_size: int = 768,
-    ):
-        """
-        Multi-label classifier, pretrained encoder and pooler, randomly
-        initialized classifier and embedding.
-        """
-        super().__init__()
-        self.model = BertForSequenceClassification.from_pretrained(
-            model_path,
-            num_labels=num_labels,
-            problem_type="multi_label_classification",
-        )
-
-        # Init custom embedding layer, and deprecate pretrained embeddings
-        # self.model.embeddings = nn.Embedding(vocab_size, hidden_size)
-        # self.model.config.problem_type = 'multi_label_classification'
-
-    def forward(self, input_ids=None, attention_mask=None, labels=None):
-        return self.model(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            labels=labels,
-        )
-
-
-class LSTMClassifier(nn.Module):
+class LstmForNer(nn.Module):
     def __init__(
         self,
         num_labels: int = 24,
@@ -75,7 +13,7 @@ class LSTMClassifier(nn.Module):
         vocab_size: int = 21000,
         bidirectional: bool = False,
     ):
-        super(LSTMClassifier, self).__init__()
+        super().__init__()
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.bidirectional = bidirectional
@@ -90,7 +28,8 @@ class LSTMClassifier(nn.Module):
         )
         self.hidden2label = nn.Linear(self.d * hidden_dim, num_labels)
         self.hidden = self.init_hidden()
-        self.loss_fn = nn.BCEWithLogitsLoss()
+        # self.loss_fn = nn.BCEWithLogitsLoss()
+        self.loss_fn = nn.CrossEntropyLoss()
 
     def init_hidden(self):
         h0 = Variable(
@@ -102,11 +41,17 @@ class LSTMClassifier(nn.Module):
         return (h0, c0)
 
     def forward(self, input_ids, attention_mask=None, labels=None):
+        """
+        L: sequence length
+        B: batch size
+        H: hidden size
+        C: number of classes
+        """
         self.hidden = self.init_hidden()
         x = self.embeddings(input_ids)
         x = x.view(input_ids.shape[1], self.batch_size, -1)  # (L, B, H)
-        lstm_out, self.hidden = self.lstm(x, self.hidden)
-        logits = self.hidden2label(lstm_out[-1])
+        lstm_out, self.hidden = self.lstm(x, self.hidden)  # (L, B, H)
+        logits = self.hidden2label(lstm_out[-1])  # (L, B, C)
         loss = self.loss_fn(logits, labels)
         if labels is None:
             return {
@@ -120,8 +65,11 @@ class LSTMClassifier(nn.Module):
 
 
 if __name__ == "__main__":
-    model_path = "hfl/rbt3"
-    model = BertOracleTheme(model_path)
+    # model_path = 'hfl/rbt3'
+    # model = BertOracleTheme(model_path)
+    model = LstmForNer(
+        num_labels=25,
+    )
     # print(model)
     input_ids = LongTensor(
         [

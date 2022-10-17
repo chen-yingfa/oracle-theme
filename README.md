@@ -93,7 +93,7 @@ python3 train.py
 Model               | Acc.  | Micro-F1 | Macro-F1
 ---                 | ---   | ---      | ---
 LSTM                | 15.43 |  20.05   | 9.21
-BiLSTM              | 
+BiLSTM              | 23.05 | 25.93    | 
 RBT3                | 81.00 | 75.76    | 42.37
 BERT (Rand-init)    | 
 BERT (Pretrained)   | 79.10 |
@@ -105,3 +105,21 @@ F1 of RBT3 on each theme sorted by example count (descending):
 <img src="./images/f1_theme.png" style="width: 70%">
 
 So, on less frequent themes, the F1 is very bad.
+
+
+# NER using BiLSTM
+
+## Data
+
+数据应该放在 ner 目录下，以 csv 格式存储，如：
+
+- train set: `ner/train.csv`
+- dev set: `ner/dev.csv`
+- test set: `ner/test.csv`
+
+## Training 
+
+```bash
+python3 train_ner_lstm.py
+```
+

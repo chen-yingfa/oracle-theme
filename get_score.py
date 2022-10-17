@@ -5,6 +5,7 @@ from sklearn.metrics import f1_score
 
 import numpy as np
 
+
 def get_metrics_1d(labels, preds):
     pos_label = 0
     pos_pred = 0
@@ -21,11 +22,12 @@ def get_metrics_1d(labels, preds):
     prec = pos_match / (pos_pred + 1e-9)
     f1 = 2 * recall * prec / (recall + prec + 1e-9)
     score = {
-        'f1': f1,
-        'prec': prec,
-        'recall': recall,
+        "f1": f1,
+        "prec": prec,
+        "recall": recall,
     }
     return score
+
 
 def get_metrics(labels, preds):
     n, m = labels.shape
@@ -34,19 +36,19 @@ def get_metrics(labels, preds):
         score = get_metrics_1d(labels[:, j], preds[:, j])
         scores.append(score)
     return scores
-        
+
 
 # model_path = 'hfl/rbt3'
 # model_path = 'lstm'
-model_path = 'jiagu_text_bert'
-exp_name = '220629_handa'
+model_path = "jiagu_text_bert"
+exp_name = "220629_handa"
 # run_name = 'lr0.5_bs64_embed768_h512_ep4'
-run_name = 'lr5e-05'
-result_dir = Path('result', exp_name, model_path, run_name)
+run_name = "lr5e-05"
+result_dir = Path("result", exp_name, model_path, run_name)
 
-test_dir = result_dir / 'test'
-preds_file = test_dir / 'preds.json'
-labels_file = test_dir / 'labels.json'
+test_dir = result_dir / "test"
+preds_file = test_dir / "preds.json"
+labels_file = test_dir / "labels.json"
 
 preds = json.load(open(preds_file))
 labels = json.load(open(labels_file))
@@ -63,11 +65,11 @@ scores = get_metrics(labels, preds)
 # print(f1_score(labels, preds))
 
 print(scores)
-f1s = [s['f1'] for s in scores]
-print(f'Average F1: {round(100 * sum(f1s) / len(f1s), 2)}')
+f1s = [s["f1"] for s in scores]
+print(f"Average F1: {round(100 * sum(f1s) / len(f1s), 2)}")
 print(f1s)
 plt.plot(f1s)
-plt.xlabel('Theme')
-plt.ylabel('F1')
-plt.savefig('f1_theme.png')
+plt.xlabel("Theme")
+plt.ylabel("F1")
+plt.savefig("f1_theme.png")
 plt.clf()
